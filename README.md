@@ -1,2 +1,2 @@
 # zndfile
-Zig bindings for libsndfile
+Zig bindings for [libsndfile](https://github.com/libsndfile/libsndfile).
