@@ -17,19 +17,48 @@ pub fn main() !void {
 
     // Try changing this to i32, f32, f64
     const T = i16;
-    var input_file = try znd.Sndfile.init(args[1], .{});
+    var input_file = try znd.Zndfile.init(args[1], .{});
     defer input_file.deinit();
 
     // Open the output file as a 16-bit signed WAV
-    var output_file = try znd.Sndfile.init(args[2], .{ .mode = .write, .subformat = .pcm_16 });
+    const output_cfg: znd.Config = .{
+        .mode = .write,
+        .format = .wav,
+        .subformat = .pcm_16,
+    };
+    var output_file = try znd.Zndfile.init(args[2], output_cfg);
     defer output_file.deinit();
+    // Try writing to some other formats, for example:
+    // .{
+    //     .mode = .write,
+    //     .format = .aiff,
+    //     .subformat = .pcm_16,
+    // };
+    // .{
+    //     .mode = .write,
+    //     .format = .flac,
+    //     .subformat = .pcm_24,
+    // };
 
-    const frame_size = 128;
-    const samples_per_frame: usize = input_file.info.channels;
-    const items_per_buffer = frame_size * samples_per_frame;
+    // On frames vs. items:
+    // sndfile uses the concept of "frames" and "items" when reading
+    // and/or writing to a sndfile.
+    //
+    // A "frame" is a grouping of samples (one for each channel of audio)
+    // that are intended to be played at the same time. A frame of stereo
+    // .pcm_16 audio would be an array of two 16-bit integers.
+    //
+    // An "item" is a single sample of audio. A frame of stereo .pcm_16
+    // audio contains two "items".
+    //
+    // The zndfile API does it's reads and writes using items. The caller
+    // passes in a slice and the number of items can easily be inferred
+    // easily by using slice.len.
 
-    // create a buffer to hold our samples
-    const buffer = try alloc.alloc(T, items_per_buffer);
+    // Lets create a buffer with a frame size of 128 (256 items).
+    const items_per_frame: usize = input_file.info.channels;
+    const num_items = 128 * items_per_frame;
+    const buffer = try alloc.alloc(T, num_items);
     defer alloc.free(buffer);
 
     while (true) {
