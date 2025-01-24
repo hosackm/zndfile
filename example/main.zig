@@ -67,11 +67,11 @@ pub fn main() !void {
         // to match the bit-depth of the output file.
 
         // read from input file
-        const num_frames_read = try input_file.read(T, buffer);
-        if (num_frames_read == 0) break;
+        const num_items_read = try input_file.read(T, buffer);
+        if (num_items_read == 0) break;
 
         // do something with the samples
-        for (0..num_frames_read) |i| {
+        for (0..num_items_read) |i| {
             buffer[i] = @divTrunc(buffer[i], 2);
         }
 
@@ -80,7 +80,7 @@ pub fn main() !void {
         // as 16-bit in the output file.
         _ = try output_file.write(
             T,
-            buffer[0..num_frames_read],
+            buffer[0..num_items_read],
         );
     }
 }
